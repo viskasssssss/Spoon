@@ -2,6 +2,7 @@
 
 #include "window.hh"
 #include "event/app_event.hh"
+#include "module/module.hh"
 
 
 namespace spoon {
@@ -11,12 +12,13 @@ namespace spoon {
         ~app();
 
         void run();
-        
+
         void on_event(event& e);
         bool on_window_close(window_close_event& e);
         void on_render();
     private:
         bool m_running = true;
         ref<window> m_main_window = nullptr;
+        ref<module_manager> m_module_manager = nullptr;
     };
 }

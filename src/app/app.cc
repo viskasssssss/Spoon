@@ -4,22 +4,27 @@
 #include <imgui.h>
 
 #include "def.hh"
-#include "event/app_event.hh"
 #include "log.hh"
+#include "event/app_event.hh"
 
 namespace spoon {
     app::app() {
         log::init();
 
-        window_props props;
-        props.title = "Spoon Editor";
-        props.width = 1280;
-        props.height = 720;
-        props.flags = WINDOW_FLAG_RESIZABLE;
+        window_props wprops{};
+        wprops.title = "Spoon Editor";
+        wprops.width = 1280;
+        wprops.height = 720;
+        wprops.flags = WINDOW_FLAG_RESIZABLE;
 
-        m_main_window = create_ref<window>(props);
+        m_main_window = create_ref<window>(wprops);
         m_main_window->set_event_callback(SP_BIND_EVENT_FN(app::on_event));
         m_main_window->set_render_callback(SP_BIND_EVENT_FN(app::on_render));
+
+        // initialize the module manager
+
+        module_manager_props mprops{};
+        m_module_manager = create_ref<module_manager>(mprops);
     }
 
     app::~app() {}

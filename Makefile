@@ -22,6 +22,10 @@ INCLUDE_DIR := $(THIRDPARTY)/include
 LIB_DIR     := $(THIRDPARTY)/lib
 ASSET_DIR   := $(THIRDPARTY)/copy_on_build
 
+BUILTIN_MODULES_DIR := built_in_modules
+MODULES_DIR         := $(BUILD_DIR)/modules
+MODULES_STAMP       := $(MODULES_DIR)/.built
+
 # ==============================================================================
 # platform
 # ==============================================================================
@@ -34,7 +38,8 @@ ifeq ($(OS),Windows_NT)
         -lmingw32 \
         -lSDL2main \
         -lSDL2 \
-        -lopengl32
+        -lopengl32 \
+        -llua55
 
 else
 
@@ -46,7 +51,8 @@ else
 
         LDLIBS := \
             -lSDL2 \
-            -lGL
+            -lGL \
+            -llua55
 
     else
 
@@ -64,6 +70,7 @@ INCLUDE_DIRS := \
     -I$(INCLUDE_DIR) \
 	-Ithirdparty/include/imgui/ \
 	-Ithirdparty/include/SDL2/ \
+	-Ithirdparty/include/lua550/ \
     -Isrc \
     -Isrc/util
 
@@ -86,6 +93,7 @@ SRC := \
     $(wildcard thirdparty/glad/*.c)
 
 SRC := $(sort $(SRC))
+MODULE_FILES := $(call rwildcard,$(BUILTIN_MODULES_DIR),*)
 
 # ==============================================================================
 # object files
@@ -146,7 +154,7 @@ endif
 # targets
 # ==============================================================================
 
-.PHONY: all default debug release build clean rebuild assets
+.PHONY: all default debug release build clean rebuild assets modules
 
 default: release
 
@@ -158,7 +166,7 @@ debug:
 release:
 	@$(MAKE) BUILD_TYPE=release build
 
-build: $(BIN)
+build: $(BIN) modules
 	@echo "  ASSETS  $(ASSET_DIR)"
 ifeq ($(OS),Windows_NT)
 	@if exist "$(ASSET_DIR)" xcopy /y /d /e "$(ASSET_DIR)\*" "$(BUILD_DIR)\" >nul
@@ -168,6 +176,25 @@ endif
 	@echo ""
 	@echo "  BUILD   $(BUILD_TYPE)"
 	@echo "  OUTPUT  $(BIN)"
+
+# ==============================================================================
+# built-in modules
+# ==============================================================================
+
+modules: $(MODULES_STAMP)
+
+$(MODULES_STAMP): $(MODULE_FILES)
+	@echo "  MODULES $(BUILTIN_MODULES_DIR) -> $(MODULES_DIR)"
+ifeq ($(OS),Windows_NT)
+	@if not exist "$(MODULES_DIR)" mkdir "$(MODULES_DIR)"
+	@xcopy /y /d /e "$(BUILTIN_MODULES_DIR)\*" "$(MODULES_DIR)\" >nul
+	@type nul > "$(MODULES_STAMP)"
+else
+	@mkdir -p "$(MODULES_DIR)"
+	@cp -r "$(BUILTIN_MODULES_DIR)/." "$(MODULES_DIR)/"
+	@touch "$(MODULES_STAMP)"
+endif
+
 
 # ==============================================================================
 # linking
