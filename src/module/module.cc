@@ -280,7 +280,7 @@ namespace spoon {
     bool module_manager::load_module(fs::directory_entry entry) {
         SP_CORE_TRACE("Loading module: {0}", entry.path().filename().string().c_str());
 
-        ref<module> m = create_ref<module>();
+        ref<module> m = create_ref<module>(this);
         m->dir = entry.path();
         //TODO:
         m_modules.push_back(m);

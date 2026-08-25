@@ -5,8 +5,13 @@
 #include "app/window.hh"
 #include "log.hh"
 #include "def.hh"
+#include "module.hh"
 
 namespace spoon {
+    module_context::module_context(module_manager* manager) {
+        m_manager = manager;
+    }
+
     void module_context::set_callback() {
         if (m_current_callback_idx != -1) {
             SP_CORE_WARN("set_callback(): callback already exists, not creating another");

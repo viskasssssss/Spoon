@@ -14,7 +14,8 @@ namespace spoon {
     enum ui_instruction_type {
         UI_INSTRUCTION_START_WINDOW,
         UI_INSTRUCTION_END_WINDOW,
-        UI_INSTRUCTION_TEXT
+        UI_INSTRUCTION_TEXT,
+        UI_INSTRUCTION_BUTTON
     };
 
     struct ui_argument {

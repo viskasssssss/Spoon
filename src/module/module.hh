@@ -35,6 +35,11 @@ namespace spoon {
         std::vector<std::filesystem::path> sources;
         module_settings settings;
         module_context context;
+
+        module(module_manager* manager)
+        : context(manager)
+        {
+        }
     };
 
 

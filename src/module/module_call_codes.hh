@@ -14,7 +14,7 @@ namespace spoon {
         CALL_CODE_UI_SET_WINDOW = 201,
         CALL_CODE_UI_POP = 202,
         CALL_CODE_UI_START_WINDOW =  203,
-        CALL_CODE_UI_BASIC_INSTRUCTION = 204, // basic instruction is an instruction that doesn't return anything
+        CALL_CODE_UI_BASIC_INSTRUCTION = 204,
 
         CALL_CODE_WINDOW_GET_MAIN = 301,
 
