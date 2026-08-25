@@ -11,6 +11,7 @@
 #include "event/mouse_event.hh"
 
 namespace spoon {
+    static std::vector<window*> s_windows;
     static bool sdl_initialized = false;
     static bool glad_initialized = false;
 
@@ -36,6 +37,9 @@ namespace spoon {
     }
 
     window::window(window_props props) {
+        m_event_callbacks = create_ref<function_registry<event&>>();
+        m_render_callbacks = create_ref<function_registry<>>();
+
         // make sure that sdl initialized
         if (!sdl_initialized) {
             if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -129,6 +133,9 @@ namespace spoon {
 
         SDL_SetEventFilter(window_resize_filter, this);
 
+        // add this window to global windows
+
+        s_windows.push_back(this);
     }
 
     window::~window() {
@@ -141,7 +148,7 @@ namespace spoon {
 
     void window::poll_events() {
 
-        if (!m_event_callback || !m_is_valid) return;
+        if (m_event_callbacks->empty() || !m_is_valid) return;
 
         SDL_Event event;
 
@@ -151,7 +158,7 @@ namespace spoon {
             switch (event.type) {
                 case SDL_QUIT: {
                     window_close_event event;
-                    m_event_callback(event);
+                    call_event_callbacks(event);
                     m_is_closed = true;
                     break;
                 }
@@ -165,7 +172,7 @@ namespace spoon {
                         glViewport(0, 0, width, height);
 
                         window_resize_event event(width, height);
-                        m_event_callback(event);
+                        call_event_callbacks(event);
                     }
                     break;
                 }
@@ -173,14 +180,14 @@ namespace spoon {
                     SDL_Scancode scancode = event.key.keysym.scancode;
                     SDL_Keycode key = SDL_GetKeyFromScancode(scancode);
                     key_pressed_event event(key);
-                    m_event_callback(event);
+                    call_event_callbacks(event);
                     break;
                 }
                 case SDL_KEYUP: {
                     SDL_Scancode scancode = event.key.keysym.scancode;
                     SDL_Keycode key = SDL_GetKeyFromScancode(scancode);
                     key_released_event event(key);
-                    m_event_callback(event);
+                    call_event_callbacks(event);
                     break;
                 }
                 case SDL_TEXTINPUT: {
@@ -189,7 +196,7 @@ namespace spoon {
     
                     SDL_Keycode key = SDL_GetKeyFromName(charString);
                     key_typed_event event(key);
-                    m_event_callback(event);
+                    call_event_callbacks(event);
                     break;
                 }
                 default: {
@@ -205,8 +212,7 @@ namespace spoon {
 
         render_start();
 
-        if (m_render_callback)
-            m_render_callback();
+        call_render_callbacks();
 
         render_end();
     }
@@ -253,5 +259,40 @@ namespace spoon {
         if (!m_is_valid) return;
 
         SDL_GL_SwapWindow(m_handle);
+    }
+
+    std::vector<window*> window::get_all_windows() {
+        return s_windows;
+    }
+
+    void window::call_event_callbacks(event& e) {
+        if (!m_event_callbacks->empty()) {
+            function_registry<event&> pending_callbacks;
+            pending_callbacks = *m_event_callbacks;
+            for (auto& c : pending_callbacks) {
+                pending_callbacks.execute_function(c.first, e);
+            }
+        }
+    }
+
+    void window::call_render_callbacks() {
+        if (!m_render_callbacks->empty()) {
+            function_registry<> pending_callbacks;
+            pending_callbacks = *m_render_callbacks;
+            for (auto& c : pending_callbacks) {
+                pending_callbacks.execute_function(c.first);
+            }
+        }
+    }
+
+    window* window::get_window_by_uuid(uuid id) {
+        if (!get_all_windows().empty()) {
+            for (window* w : get_all_windows()) {
+                if (w->get_id() == id) {
+                    return w;
+                }
+            }
+        }
+        return nullptr;
     }
 }

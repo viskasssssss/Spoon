@@ -14,6 +14,7 @@ extern "C"
 
 #include "def.hh"
 #include "module_event.hh"
+#include "module_context.hh"
 
 
 namespace spoon {
@@ -26,16 +27,21 @@ namespace spoon {
         std::string name = "NONE";
         std::string version = "0.0.0";
         std::string spoon_api = "0.0";
+        int priority = 0;
     };
 
     struct module {
         std::filesystem::path dir;
+        std::vector<std::filesystem::path> sources;
         module_settings settings;
+        module_context context;
     };
 
 
     class module_manager {
     public:
+        static ref<module_manager> init(module_manager_props props);
+
         module_manager(module_manager_props props);
         ~module_manager();
 
@@ -43,12 +49,15 @@ namespace spoon {
         bool load_module(std::filesystem::directory_entry entry);
 
         void trigger_event(const std::string& event_name, const std::string& data);
+
+        ref<module> get_module_by_source(const std::filesystem::path& source);
     private:
         bool check_lua(int r);
 
         lua_State *m_lua_state = nullptr;
         module_manager_props m_props;
         std::vector<ref<module>> m_modules;
-        ref<module_event_manager> event_manager;
+        std::vector<ref<module>> m_pending_modules;
+        ref<module_event_manager> m_event_manager;
     };
 }

@@ -6,6 +6,7 @@
 #include "def.hh"
 #include "log.hh"
 #include "event/app_event.hh"
+#include "module/module.hh"
 
 namespace spoon {
     app::app() {
@@ -24,7 +25,7 @@ namespace spoon {
         // initialize the module manager
 
         module_manager_props mprops{};
-        m_module_manager = create_ref<module_manager>(mprops);
+        m_module_manager = module_manager::init(mprops);
     }
 
     app::~app() {}
@@ -50,6 +51,8 @@ namespace spoon {
     }
 
     void app::on_render() {
+        m_module_manager->trigger_event("app.on_ui_render", "");
+
         ImGui::Begin("Test Window!");
 
         ImGui::Text("Hello! I'm the 'Test Window'! Nice to meet you.");
